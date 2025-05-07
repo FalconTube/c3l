@@ -1,10 +1,12 @@
-# Clipllama
+<div align="center">
+  <img src="./assets/logo.svg" alt="Clipllama logo" width="150">
+</div>
 
-![Clipllama logo](./assets/logo.svg)
+# Clipllama
 
 Make your clipboard interact with an Ollama server.
 
-Simply hit `Ctrl+c` in any application and automatically attach it to your prompt!
+Simply use **Copy** in any application and automatically attach it to your prompt!
 
 ## Features
 

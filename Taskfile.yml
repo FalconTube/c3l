@@ -16,5 +16,5 @@ tasks:
 
   upx:
     cmds:
-      - go build -ldflags="-s -w" -o clipllama main.go && upx cll
+      - go build -ldflags="-s -w" -o clipllama main.go && upx clipllama
     silent: true
