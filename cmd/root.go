@@ -4,17 +4,41 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/atotto/clipboard"
 	"github.com/ollama/ollama/api"
-	"github.com/spf13/cobra"
 )
 
-var noThink bool
-var doPrint bool
-var doReplace bool
+type Cli struct {
+	Prompt  string `arg:"" help:"foo"`
+	Think   bool   `help:"foo" negatable:""`
+	Print   bool   `help:"foo" negatable:""`
+	Replace bool   `help:"foo" negatable:""`
+}
+
+func (c *Cli) Run() error {
+
+	content := readClipboard()
+
+	prompt := preparePrompt(c.Prompt, content, c.Think)
+	response, err := askOllama(prompt, "qwen3:0.6b")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	response = trimResponse(response)
+
+	if c.Print {
+		fmt.Println(response)
+	}
+
+	if c.Replace {
+		clipboard.WriteAll(response)
+	}
+
+	return nil
+}
 
 func askOllama(prompt, model string) (string, error) {
 	client, err := api.ClientFromEnvironment()
@@ -67,47 +91,4 @@ func readClipboard() string {
 	clipContent, _ := clipboard.ReadAll()
 	content := strings.TrimSpace(string(clipContent))
 	return content
-}
-
-var rootCmd = &cobra.Command{
-	Use:     "clipllama <prompt>",
-	Aliases: []string{"cl"},
-	Short:   "short",
-	Long:    `long`,
-	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-
-		userPrompt := args[0]
-		content := readClipboard()
-
-		prompt := preparePrompt(userPrompt, content, noThink)
-		response, err := askOllama(prompt, "qwen3:0.6b")
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		response = trimResponse(response)
-
-		if doPrint {
-			fmt.Println(response)
-		}
-
-		if doReplace {
-			clipboard.WriteAll(response)
-		}
-
-	},
-}
-
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-}
-
-func init() {
-	rootCmd.Flags().BoolVarP(&noThink, "nothink", "t", true, `If true, use "/no_think" mode`)
-	rootCmd.Flags().BoolVarP(&doReplace, "replace", "r", true, `If true, use replace clipboard content with ollama response`)
-	rootCmd.Flags().BoolVarP(&doPrint, "print", "p", false, `If true, prints ollama response to STDOUT`)
 }
