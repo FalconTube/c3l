@@ -8,6 +8,7 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/ollama/ollama/api"
+	"github.com/yarlson/pin"
 )
 
 type Cli struct {
@@ -21,6 +22,15 @@ func (c *Cli) Run() error {
 
 	content := readClipboard()
 
+	// Spinner
+	p := pin.New("Waiting for answer...",
+		pin.WithSpinnerColor(pin.ColorCyan),
+		pin.WithTextColor(pin.ColorYellow),
+	)
+	cancel := p.Start(context.Background())
+	defer cancel()
+
+	// Send prompt and clip content to ollama
 	prompt := preparePrompt(c.Prompt, content, c.Think)
 	response, err := askOllama(prompt, "qwen3:0.6b")
 	if err != nil {
@@ -28,6 +38,7 @@ func (c *Cli) Run() error {
 	}
 
 	response = trimResponse(response)
+	p.Stop("Done!")
 
 	if c.Print {
 		fmt.Println(response)
@@ -75,7 +86,6 @@ func preparePrompt(prompt, content string, noThink bool) string {
 
 	prompt = fmt.Sprintf(
 		"Prompt: %s\nContent: %s", prompt, content)
-	fmt.Println(prompt)
 	return prompt
 }
 
