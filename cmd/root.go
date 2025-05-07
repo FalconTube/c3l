@@ -12,10 +12,11 @@ import (
 )
 
 type Cli struct {
-	Prompt  string `arg:"" help:"foo"`
-	Think   bool   `help:"foo" negatable:""`
-	Print   bool   `help:"foo" negatable:""`
-	Replace bool   `help:"foo" negatable:""`
+	Prompt  string `arg:"" help:"Prompt being sent to Ollama"`
+	Think   bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
+	Print   bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
+	Replace bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
+	Model   string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
 }
 
 func (c *Cli) Run() error {
@@ -23,16 +24,22 @@ func (c *Cli) Run() error {
 	content := readClipboard()
 
 	// Spinner
-	p := pin.New("Waiting for answer...",
+	p := pin.New("Running...",
 		pin.WithSpinnerColor(pin.ColorCyan),
 		pin.WithTextColor(pin.ColorYellow),
+		pin.WithPrefix(fmt.Sprintf("🤖%s", c.Model)),
+		pin.WithPrefixColor(pin.ColorMagenta),
 	)
 	cancel := p.Start(context.Background())
 	defer cancel()
 
+	if c.Think == false {
+		p.UpdateMessage("Running in no-think mode...")
+	}
+
 	// Send prompt and clip content to ollama
 	prompt := preparePrompt(c.Prompt, content, c.Think)
-	response, err := askOllama(prompt, "qwen3:0.6b")
+	response, err := askOllama(prompt, c.Model)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,7 +87,7 @@ func askOllama(prompt, model string) (string, error) {
 }
 
 func preparePrompt(prompt, content string, noThink bool) string {
-	if noThink {
+	if noThink == false {
 		prompt = fmt.Sprintf(" /no_think %s", prompt)
 	}
 
