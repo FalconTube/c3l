@@ -12,7 +12,7 @@ func main() {
 	// Load CLI
 	opt := kong.Configuration(kongyaml.Loader, []string{"~/.clipllama.yaml"}...)
 	ctx := kong.Parse(&cli,
-		kong.Name("cll"),
+		kong.Name("clipllama"),
 		kong.Description("Takes the clipboard content + given prompt and sends it to Ollama"),
 		kong.UsageOnError(),
 		opt,
