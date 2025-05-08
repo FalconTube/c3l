@@ -2,4 +2,5 @@ main
 c3l
 *.yaml
 *.gif
-
+# Added by goreleaser init:
+dist/
