@@ -18,7 +18,7 @@ type Cli struct {
 	Print   bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
 	Replace bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
 	Model   string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
-	Notify  bool   `short:"n" help:"If true, display tray notification when finished." default:"false"`
+	Notify  bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
 }
 
 func (c *Cli) Run() error {
@@ -26,12 +26,7 @@ func (c *Cli) Run() error {
 	content := readClipboard()
 
 	// Spinner
-	p := pin.New("Running...",
-		pin.WithSpinnerColor(pin.ColorCyan),
-		pin.WithTextColor(pin.ColorYellow),
-		pin.WithPrefix(fmt.Sprintf("🤖%s", c.Model)),
-		pin.WithPrefixColor(pin.ColorMagenta),
-	)
+	p := initSpinner(c.Model)
 	cancel := p.Start(context.Background())
 	defer cancel()
 
@@ -49,19 +44,20 @@ func (c *Cli) Run() error {
 	response = trimResponse(response)
 	p.Stop("Done!")
 
-	if c.Notify {
-		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
-	}
-
-	if c.Print {
-		fmt.Println(response)
-	}
-
-	if c.Replace {
-		clipboard.WriteAll(response)
-	}
+	postResponseActions(response, c)
 
 	return nil
+}
+
+func initSpinner(model string) *pin.Pin {
+	// Spinner
+	p := pin.New("Running...",
+		pin.WithSpinnerColor(pin.ColorCyan),
+		pin.WithTextColor(pin.ColorYellow),
+		pin.WithPrefix(fmt.Sprintf("🤖%s", model)),
+		pin.WithPrefixColor(pin.ColorMagenta),
+	)
+	return p
 }
 
 func askOllama(prompt, model string) (string, error) {
@@ -100,6 +96,20 @@ func preparePrompt(prompt, content string, noThink bool) string {
 	prompt = fmt.Sprintf(
 		"Prompt: %s\nContent: %s", prompt, content)
 	return prompt
+}
+
+func postResponseActions(response string, c *Cli) {
+	if c.Notify {
+		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
+	}
+
+	if c.Print {
+		fmt.Println(response)
+	}
+
+	if c.Replace {
+		clipboard.WriteAll(response)
+	}
 }
 
 func trimResponse(response string) string {
