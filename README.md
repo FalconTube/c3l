@@ -2,7 +2,7 @@
   <img src="./assets/logo.svg" alt="Clipllama logo" width="150">
 </div>
 
-# Clipllama
+# C3L - Clipllama
 
 Make your clipboard interact with an Ollama server.
 
@@ -18,16 +18,16 @@ Simply use **Copy** in any application and automatically attach it to your promp
 ## Installation
 
 ```bash
-go install github.com/FalconTube/clipllama@latest
+go install github.com/FalconTube/c3l@latest
 ```
 
-This will install the latest version of `clipllama` on your system and put the `clipllama` binary on your path.
+This will install the latest version of `c3l` on your system and put the `c3l` binary on your path.
 
 ## Usage
 
 ```bash
-$ clipllama --help
-Usage: clipllama <prompt> [flags]
+$ c3l --help
+Usage: c3l <prompt> [flags]
 
 Takes the clipboard content + given prompt and sends it to Ollama
 

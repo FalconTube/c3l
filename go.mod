@@ -1,4 +1,4 @@
-module github.com/FalconTube/clipllama
+module github.com/FalconTube/c3l
 
 go 1.24.2
 

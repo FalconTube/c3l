@@ -11,10 +11,10 @@ tasks:
 
   build:
     cmds:
-      - go build -ldflags="-s -w" main.go
+      - go build -ldflags="-s -w" -o c3l main.go 
     silent: true
 
   upx:
     cmds:
-      - go build -ldflags="-s -w" -o clipllama main.go && upx clipllama
+      - go build -ldflags="-s -w" -o c3l main.go && upx c3l
     silent: true
