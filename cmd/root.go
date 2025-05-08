@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/atotto/clipboard"
+	"github.com/gen2brain/beeep"
 	"github.com/ollama/ollama/api"
 	"github.com/yarlson/pin"
 )
@@ -17,6 +18,7 @@ type Cli struct {
 	Print   bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
 	Replace bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
 	Model   string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
+	Notify  bool   `short:"n" help:"If true, display tray notification when finished." default:"false"`
 }
 
 func (c *Cli) Run() error {
@@ -46,6 +48,10 @@ func (c *Cli) Run() error {
 
 	response = trimResponse(response)
 	p.Stop("Done!")
+
+	if c.Notify {
+		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
+	}
 
 	if c.Print {
 		fmt.Println(response)
