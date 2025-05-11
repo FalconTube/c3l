@@ -14,7 +14,12 @@ tasks:
       - go build -ldflags="-s -w" -o c3l main.go 
     silent: true
 
-  upx:
+  test-release:
     cmds:
-      - go build -ldflags="-s -w" -o c3l main.go && upx c3l
+      - goreleaser release --snapshot --clean
+    silent: true
+
+  prod-release:
+    cmds:
+      - goreleaser release --clean
     silent: true
