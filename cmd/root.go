@@ -3,14 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
+	utils "github.com/FalconTube/c3l/utils"
 	"github.com/atotto/clipboard"
 	"github.com/gen2brain/beeep"
 	"github.com/ollama/ollama/api"
-	"github.com/yarlson/pin"
 )
 
 type Cli struct {
@@ -20,15 +19,21 @@ type Cli struct {
 	Replace    bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
 	Model      string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
 	Notify     bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
+	Expand     bool   `short:"e" help:"Expand given prompt into long version, as defined in $HOME/.c3l.toml " negatable:"" `
 	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
 }
 
 func (c *Cli) Run() error {
 
+	if c.Expand {
+		c.Prompt = utils.ExpandPromptFromToml(c.Prompt)
+		utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
+	}
+
 	content := readClipboard()
 
 	// Spinner
-	p := initSpinner(c.Model)
+	p := utils.InitSpinner(c.Model)
 	cancel := p.Start(context.Background())
 	defer cancel()
 
@@ -40,7 +45,7 @@ func (c *Cli) Run() error {
 	prompt := preparePrompt(c.Prompt, content, c.Think)
 	response, err := askOllama(prompt, c.Model, c.OllamaHost)
 	if err != nil {
-		log.Fatal(err)
+		utils.Logger.Fatal(err)
 	}
 
 	response = trimResponse(response)
@@ -49,17 +54,6 @@ func (c *Cli) Run() error {
 	postResponseActions(response, c)
 
 	return nil
-}
-
-func initSpinner(model string) *pin.Pin {
-	// Spinner
-	p := pin.New("Running...",
-		pin.WithSpinnerColor(pin.ColorCyan),
-		pin.WithTextColor(pin.ColorYellow),
-		pin.WithPrefix(fmt.Sprintf("🤖%s", model)),
-		pin.WithPrefixColor(pin.ColorMagenta),
-	)
-	return p
 }
 
 func askOllama(prompt, model, ollamaHost string) (string, error) {

@@ -3,14 +3,15 @@ package main
 import (
 	cmd "github.com/FalconTube/c3l/cmd"
 	"github.com/alecthomas/kong"
-	kongyaml "github.com/alecthomas/kong-yaml"
+	kongtoml "github.com/alecthomas/kong-toml"
 )
 
 var cli cmd.Cli
 
 func main() {
 	// Load CLI
-	opt := kong.Configuration(kongyaml.Loader, []string{"~/.c3l.yaml"}...)
+	// opt := kong.Configuration(kongyaml.Loader, []string{"~/.c3l.yaml"}...)
+	opt := kong.Configuration(kongtoml.Loader, []string{"~/.c3l.toml"}...)
 	ctx := kong.Parse(&cli,
 		kong.Name("c3l"),
 		kong.Description("Takes the clipboard content + given prompt and sends it to Ollama"),
