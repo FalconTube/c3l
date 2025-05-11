@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/atotto/clipboard"
@@ -13,12 +14,13 @@ import (
 )
 
 type Cli struct {
-	Prompt  string `arg:"" help:"Prompt being sent to Ollama"`
-	Think   bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
-	Print   bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
-	Replace bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
-	Model   string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
-	Notify  bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
+	Prompt     string `arg:"" help:"Prompt being sent to Ollama"`
+	Think      bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
+	Print      bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
+	Replace    bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
+	Model      string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
+	Notify     bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
+	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
 }
 
 func (c *Cli) Run() error {
@@ -36,7 +38,7 @@ func (c *Cli) Run() error {
 
 	// Send prompt and clip content to ollama
 	prompt := preparePrompt(c.Prompt, content, c.Think)
-	response, err := askOllama(prompt, c.Model)
+	response, err := askOllama(prompt, c.Model, c.OllamaHost)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,7 +62,8 @@ func initSpinner(model string) *pin.Pin {
 	return p
 }
 
-func askOllama(prompt, model string) (string, error) {
+func askOllama(prompt, model, ollamaHost string) (string, error) {
+	os.Setenv("OLLAMA_HOST", ollamaHost)
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
 		return "", err
