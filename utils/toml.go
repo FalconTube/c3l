@@ -30,15 +30,31 @@ func ExpandPromptFromToml(predefined string) string {
 	return expandedString
 
 }
+func GetConfigPath() (string, error) {
 
-func getPredefinedFromToml() (ExpandPrompts, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return ExpandPrompts{}, err
+		return "", err
 	}
 
 	configFile := filepath.Join(home, ".c3l.toml")
-	config, err := os.ReadFile(configFile)
+	return configFile, nil
+}
+
+func ReadConfigToml() ([]byte, error) {
+	configPath, err := GetConfigPath()
+	if err != nil {
+		return nil, err
+	}
+	config, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
+}
+
+func getPredefinedFromToml() (ExpandPrompts, error) {
+	config, err := ReadConfigToml()
 	if err != nil {
 		return ExpandPrompts{}, err
 	}

@@ -12,8 +12,12 @@ import (
 	"github.com/ollama/ollama/api"
 )
 
-type Cli struct {
-	Prompt     string `arg:"" help:"Prompt being sent to Ollama"`
+type DoCmd struct {
+	Prompt string `arg:"" help:"Prompt being sent to Ollama"`
+	Flags
+}
+
+type Flags struct {
 	Think      bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
 	Print      bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
 	Replace    bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
@@ -23,7 +27,7 @@ type Cli struct {
 	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
 }
 
-func (c *Cli) Run() error {
+func (c *DoCmd) Run() error {
 
 	if c.Expand {
 		c.Prompt = utils.ExpandPromptFromToml(c.Prompt)
@@ -95,7 +99,7 @@ func preparePrompt(prompt, content string, noThink bool) string {
 	return prompt
 }
 
-func postResponseActions(response string, c *Cli) {
+func postResponseActions(response string, c *DoCmd) {
 	if c.Notify {
 		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
 	}

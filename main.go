@@ -6,7 +6,12 @@ import (
 	kongtoml "github.com/alecthomas/kong-toml"
 )
 
-var cli cmd.Cli
+type Cli struct {
+	Do     cmd.DoCmd     `cmd:"" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
+	Config cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+}
+
+var cli Cli
 
 func main() {
 	// Load CLI
@@ -21,6 +26,7 @@ func main() {
 	_, err := kong.New(&cli, opt)
 	ctx.FatalIfErrorf(err)
 	// Run main command
-	cli.Run()
+	ctx.Run()
+	// cli.Run()
 
 }
