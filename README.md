@@ -35,9 +35,15 @@ Arguments:
   <prompt>    Prompt being sent to Ollama
 
 Flags:
-  -h, --help                  Show context-sensitive help.
-  -t, --[no-]think            If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt
-  -p, --[no-]print            If true, prints response to stdout (default: true)
-  -r, --[no-]replace          If true, put Ollama output on clipboard
-  -m, --model="qwen3:0.6b"    Ollama model to use. Available models: https://ollama.com/library
+  -h, --help                             Show context-sensitive help.
+  -t, --[no-]think                       If true, uses thinking mode, if applicable in model.
+                                         If false, adds '/no_think' to prompt
+  -p, --[no-]print                       If true, prints response to stdout (default: true)
+  -r, --[no-]replace                     If true, put Ollama output on clipboard
+  -m, --model="qwen3:0.6b"               Ollama model to use. Available models:
+                                         https://ollama.com/library
+  -n, --[no-]notify                      If true, display tray notification when finished.
+  -e, --[no-]expand                      Expand given prompt into long version, as defined in
+                                         $HOME/.c3l.toml
+      --ollama-host="127.0.0.1:11434"    IP Address for the Ollama server ($OLLAMA_HOST)
 ```
