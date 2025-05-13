@@ -7,8 +7,9 @@ import (
 )
 
 type Cli struct {
-	Do     cmd.DoCmd     `cmd:"" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
-	Config cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+	Do      cmd.DoCmd     `cmd:"" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
+	Config  cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+	Prompts cmd.PromptCmd `cmd:"" help:"Interact with prompts"`
 }
 
 var cli Cli

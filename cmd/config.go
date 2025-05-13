@@ -10,15 +10,15 @@ import (
 )
 
 type ConfigCmd struct {
-	Init InitCmd `cmd:"" help:"Create default config at $HOME/.c3l.toml"`
-	List ListCmd `cmd:"" help:"List contents of config"`
+	Init InitConfigCmd `cmd:"" help:"Create default config at $HOME/.c3l.toml"`
+	List ListConfigCmd `cmd:"" help:"List contents of config"`
 }
 
-type InitCmd struct {
+type InitConfigCmd struct {
 	Force bool `short:"f" help:"If true, will replace current config with default config, if file exists."`
 }
 
-type ListCmd struct {
+type ListConfigCmd struct {
 }
 
 // --- Plain config command
@@ -29,7 +29,7 @@ func (c *ConfigCmd) Run() error {
 
 // --- config init command
 
-func (c *InitCmd) Run() error {
+func (c *InitConfigCmd) Run() error {
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		utils.Logger.Fatal(err)
@@ -53,18 +53,14 @@ func (c *InitCmd) Run() error {
 }
 
 func writeConfigToFile(filename string) error {
-	defaultFlags := Flags{Model: "qwen3:0.6b", OllamaHost: "127.0.0.1:11434"}
-	f, err := toml.Marshal(defaultFlags)
+	defaultFlags := utils.Flags{Model: "qwen3:0.6b", OllamaHost: "127.0.0.1:11434"}
+	defaultPrompts := utils.ExpandPrompts{Prompts: map[string]string{"example": "Using the '--expand' flag with the word 'example' as the prompt will expand into this string."}}
+	defaultConfig := utils.ConfigToml{Flags: defaultFlags, ExpandPrompts: defaultPrompts}
+	content, err := toml.Marshal(defaultConfig)
 	if err != nil {
 		return err
 	}
-	defaultPrompts := utils.ExpandPrompts{Prompts: map[string]any{"example": "Using the '--expand' flag with the word 'example' as the prompt will expand into this string."}}
-	p, err := toml.Marshal(defaultPrompts)
-	if err != nil {
-		return err
-	}
-	content := fmt.Sprintf("%s\n%s", f, p)
-	err = os.WriteFile(filename, []byte(content), 0644)
+	err = os.WriteFile(filename, content, 0644)
 	if err != nil {
 		return err
 	}
@@ -73,12 +69,12 @@ func writeConfigToFile(filename string) error {
 
 // --- config list command
 
-func (c *ListCmd) Run() error {
+func (c *ListConfigCmd) Run() error {
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
 		return err
 	}
-	config, err := utils.ReadConfigToml()
+	config, err := utils.ReadConfigAsBytes()
 	if err != nil {
 		return err
 	}
