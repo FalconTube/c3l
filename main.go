@@ -12,8 +12,9 @@ import (
 type Cli struct {
 	Version VersionFlag `help:"Show version"`
 
-	Do     cmd.DoCmd     `cmd:"" help:"Perform action"`
-	Config cmd.ConfigCmd `cmd:"" help:"Perform action"`
+	Do      cmd.DoCmd     `cmd:"" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
+	Config  cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+	Prompts cmd.PromptCmd `cmd:"" help:"Interact with prompts"`
 }
 type VersionFlag bool
 

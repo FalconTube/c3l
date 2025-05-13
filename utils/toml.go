@@ -1,24 +1,40 @@
 package utils
 
 import (
-	"github.com/pelletier/go-toml"
 	"os"
 	"path/filepath"
+
+	"github.com/pelletier/go-toml/v2"
 )
 
+type ConfigToml struct {
+	Flags
+	ExpandPrompts
+}
+
+type Flags struct {
+	Think      bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
+	Print      bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
+	Replace    bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
+	Model      string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
+	Notify     bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
+	Expand     bool   `short:"e" help:"Expand given prompt into long version, as defined in $HOME/.c3l.toml " negatable:"" `
+	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
+}
+
 type ExpandPrompts struct {
-	Prompts map[string]any `toml:"prompts"`
+	Prompts map[string]string `toml:"prompts"`
 }
 
 func ExpandPromptFromToml(predefined string) string {
-	prePrompts, err := getPredefinedFromToml()
+	prePrompts, err := GetPredefinedFromToml()
 	if err != nil {
 		Logger.Fatal(err)
 	}
 
 	expanded := prePrompts.Prompts[predefined]
 
-	if expanded == nil {
+	if expanded == "" {
 		keys := make([]string, 0, len(prePrompts.Prompts))
 		for k := range prePrompts.Prompts {
 			keys = append(keys, k)
@@ -26,8 +42,7 @@ func ExpandPromptFromToml(predefined string) string {
 		Logger.Fatalf("Could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
 	}
 
-	expandedString := expanded.(string)
-	return expandedString
+	return expanded
 
 }
 func GetConfigPath() (string, error) {
@@ -41,7 +56,7 @@ func GetConfigPath() (string, error) {
 	return configFile, nil
 }
 
-func ReadConfigToml() ([]byte, error) {
+func ReadConfigAsBytes() ([]byte, error) {
 	configPath, err := GetConfigPath()
 	if err != nil {
 		return nil, err
@@ -53,8 +68,19 @@ func ReadConfigToml() ([]byte, error) {
 	return config, nil
 }
 
-func getPredefinedFromToml() (ExpandPrompts, error) {
-	config, err := ReadConfigToml()
+func ReadConfigAsStruct() (ConfigToml, error) {
+	config := ConfigToml{}
+	raw, err := ReadConfigAsBytes()
+	if err != nil {
+		return ConfigToml{}, err
+	}
+	toml.Unmarshal(raw, config)
+
+	return config, nil
+}
+
+func GetPredefinedFromToml() (ExpandPrompts, error) {
+	config, err := ReadConfigAsBytes()
 	if err != nil {
 		return ExpandPrompts{}, err
 	}

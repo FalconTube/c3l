@@ -9,7 +9,6 @@ require (
 	github.com/charmbracelet/log v0.4.1
 	github.com/gen2brain/beeep v0.0.0-20240516210008-9c006672e7f4
 	github.com/ollama/ollama v0.6.8
-	github.com/pelletier/go-toml v1.9.5
 	github.com/pelletier/go-toml/v2 v2.2.2
 	github.com/yarlson/pin v0.9.1
 )
@@ -25,6 +24,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
