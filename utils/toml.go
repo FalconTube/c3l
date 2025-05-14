@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -26,10 +27,10 @@ type ExpandPrompts struct {
 	Prompts map[string]string `toml:"prompts"`
 }
 
-func ExpandPromptFromToml(predefined string) string {
+func ExpandPromptFromToml(predefined string) (string, error) {
 	prePrompts, err := GetPredefinedFromToml()
 	if err != nil {
-		Logger.Fatal(err)
+		return "", err
 	}
 
 	expanded := prePrompts.Prompts[predefined]
@@ -39,10 +40,10 @@ func ExpandPromptFromToml(predefined string) string {
 		for k := range prePrompts.Prompts {
 			keys = append(keys, k)
 		}
-		Logger.Fatalf("Could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
+		return "", fmt.Errorf("Could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
 	}
 
-	return expanded
+	return expanded, nil
 
 }
 func GetConfigPath() (string, error) {
