@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/FalconTube/c3l/utils"
@@ -32,7 +31,7 @@ func (c *ConfigCmd) Run() error {
 func (c *InitConfigCmd) Run() error {
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
-		utils.Logger.Fatal(err)
+		return err
 	}
 	// If we are not forcing a write, check if file already exists
 	if c.Force == false {
@@ -40,13 +39,13 @@ func (c *InitConfigCmd) Run() error {
 		if os.IsNotExist(err) {
 			utils.Logger.Infof("Config file does not exist yet, will create default one now...")
 		} else {
-			utils.Logger.Fatalf("Config already exists at %s", configPath)
+			return fmt.Errorf("Config already exists at %s", configPath)
 		}
 	}
 
 	err = writeConfigToFile(configPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return nil
@@ -80,6 +79,6 @@ func (c *ListConfigCmd) Run() error {
 	}
 	utils.Logger.Infof("Content of default file %s\n", configPath)
 
-	fmt.Printf(string(config))
+	fmt.Println(string(config))
 	return nil
 }

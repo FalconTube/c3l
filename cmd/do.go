@@ -20,7 +20,11 @@ type DoCmd struct {
 func (c *DoCmd) Run() error {
 
 	if c.Expand {
-		c.Prompt = utils.ExpandPromptFromToml(c.Prompt)
+		expandedPrompt, err := utils.ExpandPromptFromToml(c.Prompt)
+		if err != nil {
+			return err
+		}
+		c.Prompt = expandedPrompt
 		utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
 	}
 
@@ -39,7 +43,7 @@ func (c *DoCmd) Run() error {
 	prompt := preparePrompt(c.Prompt, content, c.Think)
 	response, err := askOllama(prompt, c.Model, c.OllamaHost)
 	if err != nil {
-		utils.Logger.Fatal(err)
+		return err
 	}
 
 	response = trimResponse(response)

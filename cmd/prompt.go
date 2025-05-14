@@ -44,7 +44,7 @@ func (c *AddPromptCmd) Run() error {
 	if c.Force == false {
 		check := prompts.Prompts[c.Short]
 		if check != "" {
-			utils.Logger.Fatal("Prompt already exists. Use '--force' to override it.")
+			fmt.Errorf("Prompt already exists. Use '--force' to override it.")
 		}
 	}
 
