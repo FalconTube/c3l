@@ -22,6 +22,10 @@ builds:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
 
 archives:
   - formats: [tar.gz]
@@ -37,6 +41,42 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
+brews:
+  -
+    name: c3l
+    url_template: "https://github.com/FalconTube/c3l/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+    directory: Formula
+    caveats: "Copy any text to the clipboard and use c3l do <prompt> to use the clipboard content."
+    homepage: "https://github.com/FalconTube/c3l"
+    description: "Use your clipboard to interact with Ollama."
+    license: "MIT"
+
+    # Setting this will prevent goreleaser to actually try to commit the updated
+    # formula - instead, the formula file will be stored on the dist directory
+    # only, leaving the responsibility of publishing it to the user.
+    # If set to auto, the release will not be uploaded to the homebrew tap
+    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+    #
+    # Templates: allowed.
+    skip_upload: false
+
+    test: |
+      system "#{bin}/c3l --version"
+
+    install: |
+      bin.install "c3l"
+
+    # Repository to push the generated files to.
+    repository:
+      owner: FalconTube
+      name: homebrew-tap
+      branch: main
+      # token: "{{ .Env.GITHUB_PERSONAL_AUTH_TOKEN }}"
+      # token_type: "github"
 
 changelog:
   sort: asc
