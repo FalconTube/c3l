@@ -1,21 +1,36 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	cmd "github.com/FalconTube/c3l/cmd"
 	"github.com/alecthomas/kong"
 	kongtoml "github.com/alecthomas/kong-toml"
 )
 
 type Cli struct {
-	Do     cmd.DoCmd     `cmd:"" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
-	Config cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+	Version VersionFlag `help:"Show version"`
+
+	Do     cmd.DoCmd     `cmd:"" help:"Perform action"`
+	Config cmd.ConfigCmd `cmd:"" help:"Perform action"`
 }
+type VersionFlag bool
 
 var cli Cli
+var version string
+
+func (v VersionFlag) BeforeApply() error {
+	if version == "" {
+		version = "unversioned"
+	}
+	fmt.Print(version)
+	os.Exit(0)
+	return nil
+}
 
 func main() {
 	// Load CLI
-	// opt := kong.Configuration(kongyaml.Loader, []string{"~/.c3l.yaml"}...)
 	opt := kong.Configuration(kongtoml.Loader, []string{"~/.c3l.toml"}...)
 	ctx := kong.Parse(&cli,
 		kong.Name("c3l"),
@@ -26,7 +41,6 @@ func main() {
 	_, err := kong.New(&cli, opt)
 	ctx.FatalIfErrorf(err)
 	// Run main command
-	ctx.Run()
-	// cli.Run()
+	_ = ctx.Run()
 
 }
