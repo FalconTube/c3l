@@ -17,6 +17,8 @@ type DoCmd struct {
 	utils.Flags
 }
 
+type response string
+
 func (c *DoCmd) Run() error {
 
 	if c.Expand {
@@ -35,7 +37,7 @@ func (c *DoCmd) Run() error {
 	cancel := p.Start(context.Background())
 	defer cancel()
 
-	if c.Think == false {
+	if !c.Think {
 		p.UpdateMessage("Running in no-think mode...")
 	}
 
@@ -55,7 +57,10 @@ func (c *DoCmd) Run() error {
 }
 
 func askOllama(prompt, model, ollamaHost string) (string, error) {
-	os.Setenv("OLLAMA_HOST", ollamaHost)
+	err := os.Setenv("OLLAMA_HOST", ollamaHost)
+	if err != nil {
+		return "", err
+	}
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
 		return "", err
@@ -70,7 +75,7 @@ func askOllama(prompt, model, ollamaHost string) (string, error) {
 
 	ctx := context.Background()
 	respFunc := func(resp api.GenerateResponse) error {
-		ctx = context.WithValue(ctx, "response", resp.Response)
+		ctx = context.WithValue(ctx, response("response"), resp.Response)
 		return nil
 	}
 
@@ -79,12 +84,12 @@ func askOllama(prompt, model, ollamaHost string) (string, error) {
 		return "", err
 	}
 
-	response := ctx.Value("response").(string)
+	response := ctx.Value(response("response")).(string)
 	return response, nil
 }
 
 func preparePrompt(prompt, content string, noThink bool) string {
-	if noThink == false {
+	if !noThink {
 		prompt = fmt.Sprintf(" /no_think %s", prompt)
 	}
 
@@ -95,7 +100,7 @@ func preparePrompt(prompt, content string, noThink bool) string {
 
 func postResponseActions(response string, c *DoCmd) {
 	if c.Notify {
-		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
+		_ = beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
 	}
 
 	if c.Print {
@@ -103,7 +108,7 @@ func postResponseActions(response string, c *DoCmd) {
 	}
 
 	if c.Replace {
-		clipboard.WriteAll(response)
+		_ = clipboard.WriteAll(response)
 	}
 }
 

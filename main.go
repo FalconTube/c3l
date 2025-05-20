@@ -42,6 +42,8 @@ func main() {
 	_, err := kong.New(&cli, opt)
 	ctx.FatalIfErrorf(err)
 	// Run main command
-	_ = ctx.Run()
+	err = ctx.Run()
+	ctx.FatalIfErrorf(err)
+	// cli.Run()
 
 }

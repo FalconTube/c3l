@@ -34,12 +34,12 @@ func (c *InitConfigCmd) Run() error {
 		return err
 	}
 	// If we are not forcing a write, check if file already exists
-	if c.Force == false {
+	if !c.Force {
 		_, err = os.Stat(configPath)
 		if os.IsNotExist(err) {
 			utils.Logger.Infof("Config file does not exist yet, will create default one now...")
 		} else {
-			return fmt.Errorf("Config already exists at %s", configPath)
+			return fmt.Errorf("config already exists at %s", configPath)
 		}
 	}
 

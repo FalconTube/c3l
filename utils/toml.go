@@ -40,7 +40,7 @@ func ExpandPromptFromToml(predefined string) (string, error) {
 		for k := range prePrompts.Prompts {
 			keys = append(keys, k)
 		}
-		return "", fmt.Errorf("Could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
+		return "", fmt.Errorf("could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
 	}
 
 	return expanded, nil
@@ -75,7 +75,10 @@ func ReadConfigAsStruct() (ConfigToml, error) {
 	if err != nil {
 		return ConfigToml{}, err
 	}
-	toml.Unmarshal(raw, config)
+	err = toml.Unmarshal(raw, config)
+	if err != nil {
+		return ConfigToml{}, err
+	}
 
 	return config, nil
 }

@@ -9,19 +9,19 @@ import (
 )
 
 type PromptCmd struct {
-	Add    AddPromptCmd    `cmd:"" help:""`
-	Remove RemovePromptCmd `cmd:"" help:""`
-	List   ListPromptCmd   `cmd:"" help:""`
+	Add    AddPromptCmd    `cmd:"" help:"Add a shorthand notation prompt to the config."`
+	Remove RemovePromptCmd `cmd:"" help:"Remove a shorthand notation prompt from the config."`
+	List   ListPromptCmd   `cmd:"" help:"List all shorthand notation prompts available in the config."`
 }
 
 type AddPromptCmd struct {
-	Short string `arg:"" `
-	Long  string `arg:"" `
+	Short string `arg:"" help:"Shorthand notation of the prompt."`
+	Long  string `arg:"" help:"Full prompt to be expanded from the shorthand notation."`
 	Force bool   `short:"f" help:"If true, will replace prompt, even if it exists."`
 }
 
 type RemovePromptCmd struct {
-	Short string `arg:"" `
+	Short string `arg:"" help:"Shorthand notation of prompt to be removed."`
 }
 
 type ListPromptCmd struct {
@@ -41,10 +41,10 @@ func (c *AddPromptCmd) Run() error {
 		return err
 	}
 	// Only need to check, if not forcing override
-	if c.Force == false {
+	if !c.Force {
 		check := prompts.Prompts[c.Short]
 		if check != "" {
-			fmt.Errorf("Prompt already exists. Use '--force' to override it.")
+			return fmt.Errorf("prompt '%s' already exists. Use '--force' to override it", c.Short)
 		}
 	}
 
