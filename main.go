@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	cmd "github.com/FalconTube/c3l/cmd"
 	"github.com/alecthomas/kong"
@@ -12,8 +13,10 @@ import (
 type Cli struct {
 	Version VersionFlag `help:"Show version"`
 
-	Do     cmd.DoCmd     `cmd:"" help:"Perform action"`
-	Config cmd.ConfigCmd `cmd:"" help:"Perform action"`
+	// Do is executed when no sucommand is given
+	Do      cmd.DoCmd     `cmd:"" default:"withargs" help:"Send <prompt> and clipboard content to Ollama" aliases:"exec,ask,run"`
+	Config  cmd.ConfigCmd `cmd:"" help:"Interact with default config at $HOME/.c3l.toml"`
+	Prompts cmd.PromptCmd `cmd:"" help:"Interact with prompts"`
 }
 type VersionFlag bool
 
@@ -30,12 +33,37 @@ func (v VersionFlag) BeforeApply() error {
 }
 
 func main() {
+	// If no args given, print main help
+	if len(os.Args) < 2 {
+		os.Args = append(os.Args, "--help")
+	}
+	// first := "Takes the clipboard content + given prompt and sends it to Ollama."
+	// sec := "If no subcommand is given, executes the 'do' command."
+	// desc := fmt.Sprintf("%s\n %s", first, sec)
+
+	desc := `
+	Takes the clipboard content + given prompt and sends it to Ollama.
+
+If no subcommand is given, executes the 'do' command.
+	
+Examples:
+	$ c3l "let's talk about the clipboard content" -p
+
+	$ c3l do "let's talk about the clipboard content" -p
+
+	$ c3l config list
+
+	$ c3l prompts add "let" "let's talk about the clipboard content"
+		`
+	comp := strings.ReplaceAll(desc, "\n\n", " \n")
+
 	// Load CLI
 	opt := kong.Configuration(kongtoml.Loader, []string{"~/.c3l.toml"}...)
 	ctx := kong.Parse(&cli,
 		kong.Name("c3l"),
-		kong.Description("Takes the clipboard content + given prompt and sends it to Ollama"),
+		kong.Description(comp),
 		kong.UsageOnError(),
+		kong.ConfigureHelp(kong.HelpOptions{Compact: true, NoExpandSubcommands: true, FlagsLast: true}),
 		opt,
 	)
 	_, err := kong.New(&cli, opt)

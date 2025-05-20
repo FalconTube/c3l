@@ -14,23 +14,19 @@ import (
 
 type DoCmd struct {
 	Prompt string `arg:"" help:"Prompt being sent to Ollama"`
-	Flags
+	utils.Flags
 }
 
-type Flags struct {
-	Think      bool   `short:"t" help:"If true, uses thinking mode, if applicable in model. If false, adds '/no_think' to prompt" negatable:""`
-	Print      bool   `short:"p" help:"If true, prints response to stdout (default: true)" negatable:""`
-	Replace    bool   `short:"r" help:"If true, put Ollama output on clipboard" negatable:""`
-	Model      string `short:"m" help:"Ollama model to use. Available models: https://ollama.com/library" default:"qwen3:0.6b"`
-	Notify     bool   `short:"n" help:"If true, display tray notification when finished." negatable:"" default:"false"`
-	Expand     bool   `short:"e" help:"Expand given prompt into long version, as defined in $HOME/.c3l.toml " negatable:"" `
-	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
-}
+type response string
 
 func (c *DoCmd) Run() error {
 
 	if c.Expand {
-		c.Prompt = utils.ExpandPromptFromToml(c.Prompt)
+		expandedPrompt, err := utils.ExpandPromptFromToml(c.Prompt)
+		if err != nil {
+			return err
+		}
+		c.Prompt = expandedPrompt
 		utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
 	}
 
@@ -41,7 +37,7 @@ func (c *DoCmd) Run() error {
 	cancel := p.Start(context.Background())
 	defer cancel()
 
-	if c.Think == false {
+	if !c.Think {
 		p.UpdateMessage("Running in no-think mode...")
 	}
 
@@ -49,7 +45,7 @@ func (c *DoCmd) Run() error {
 	prompt := preparePrompt(c.Prompt, content, c.Think)
 	response, err := askOllama(prompt, c.Model, c.OllamaHost)
 	if err != nil {
-		utils.Logger.Fatal(err)
+		return err
 	}
 
 	response = trimResponse(response)
@@ -61,7 +57,10 @@ func (c *DoCmd) Run() error {
 }
 
 func askOllama(prompt, model, ollamaHost string) (string, error) {
-	os.Setenv("OLLAMA_HOST", ollamaHost)
+	err := os.Setenv("OLLAMA_HOST", ollamaHost)
+	if err != nil {
+		return "", err
+	}
 	client, err := api.ClientFromEnvironment()
 	if err != nil {
 		return "", err
@@ -76,7 +75,7 @@ func askOllama(prompt, model, ollamaHost string) (string, error) {
 
 	ctx := context.Background()
 	respFunc := func(resp api.GenerateResponse) error {
-		ctx = context.WithValue(ctx, "response", resp.Response)
+		ctx = context.WithValue(ctx, response("response"), resp.Response)
 		return nil
 	}
 
@@ -85,12 +84,12 @@ func askOllama(prompt, model, ollamaHost string) (string, error) {
 		return "", err
 	}
 
-	response := ctx.Value("response").(string)
+	response := ctx.Value(response("response")).(string)
 	return response, nil
 }
 
 func preparePrompt(prompt, content string, noThink bool) string {
-	if noThink == false {
+	if !noThink {
 		prompt = fmt.Sprintf(" /no_think %s", prompt)
 	}
 
@@ -101,7 +100,7 @@ func preparePrompt(prompt, content string, noThink bool) string {
 
 func postResponseActions(response string, c *DoCmd) {
 	if c.Notify {
-		beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
+		_ = beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
 	}
 
 	if c.Print {
@@ -109,7 +108,7 @@ func postResponseActions(response string, c *DoCmd) {
 	}
 
 	if c.Replace {
-		clipboard.WriteAll(response)
+		_ = clipboard.WriteAll(response)
 	}
 }
 
