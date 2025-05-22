@@ -30,7 +30,11 @@ func (c *DoCmd) Run() error {
 		utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
 	}
 
-	content := readClipboard()
+	content, err := readClipboard()
+	if err != nil {
+		return err
+	}
+	utils.Logger.Info(content)
 
 	// Spinner
 	p := utils.InitSpinner(c.Model)
@@ -120,8 +124,12 @@ func trimResponse(response string) string {
 	return res
 }
 
-func readClipboard() string {
-	clipContent, _ := clipboard.ReadAll()
+func readClipboard() (string, error) {
+	clipContent, err := clipboard.ReadAll()
+	if err != nil {
+		return "", err
+	}
+
 	content := strings.TrimSpace(string(clipContent))
-	return content
+	return content, nil
 }

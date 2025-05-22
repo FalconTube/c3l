@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	cmd "github.com/FalconTube/c3l/cmd"
+	"github.com/FalconTube/c3l/utils"
 	"github.com/alecthomas/kong"
 	kongtoml "github.com/alecthomas/kong-toml"
 )
@@ -69,6 +70,10 @@ Examples:
 	_, err := kong.New(&cli, opt)
 	ctx.FatalIfErrorf(err)
 	// Run main command
-	_ = ctx.Run()
+	err = ctx.Run()
+	if err != nil {
+		utils.Logger.Error(err)
+		os.Exit(1)
+	}
 
 }

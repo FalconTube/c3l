@@ -10,7 +10,7 @@ func InitSpinner(model string) *pin.Pin {
 	p := pin.New("Running...",
 		pin.WithSpinnerColor(pin.ColorCyan),
 		pin.WithTextColor(pin.ColorYellow),
-		pin.WithPrefix(fmt.Sprintf("🤖%s", model)),
+		pin.WithPrefix(fmt.Sprintf("🤖 %s", model)),
 		pin.WithPrefixColor(pin.ColorMagenta),
 	)
 	return p
