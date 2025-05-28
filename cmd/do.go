@@ -107,7 +107,7 @@ func postResponseActions(response string, c *DoCmd) {
 		_ = beeep.Notify("Clipllama", "Finished!", "./assets/logo.svg")
 	}
 
-	if c.Print {
+	if !c.Silent {
 		fmt.Println(response)
 	}
 
