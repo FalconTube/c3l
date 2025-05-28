@@ -30,14 +30,28 @@ func (c *DoCmd) Run() error {
 		if err != nil {
 			return err
 		}
-		c.Prompt = expandedPrompt
-		utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
+		if expandedPrompt != c.Prompt {
+			c.Prompt = expandedPrompt
+			utils.Logger.Infof(`Expanded prompt to: "%s"`, c.Prompt)
+		}
+
+		if c.System != "" {
+			expandedSystem, err := utils.ExpandSystemFromToml(c.System)
+			if err != nil {
+				return err
+			}
+			if expandedPrompt != c.System {
+				c.System = expandedSystem
+				utils.Logger.Infof(`Expanded system prompt to: "%s"`, c.System)
+			}
+		}
 	}
 
 	content, err := readClipboard()
 	if err != nil {
 		return err
 	}
+	utils.Logger.Debugf("Clipboard content: %s", content)
 
 	// Spinner
 	p := utils.InitSpinner(c.Model)
@@ -72,6 +86,7 @@ func askOllama(ollamaClient utils.OllamaClient, prompt string, model string, thi
 	req := &api.GenerateRequest{
 		Model:  model,
 		Prompt: prompt,
+		System: system,
 		// set streaming to false
 		Stream: boolPointer(false),
 		// As of Ollama v0.9.0, can set Think in API.
@@ -92,6 +107,7 @@ func askOllama(ollamaClient utils.OllamaClient, prompt string, model string, thi
 	}
 
 	response := ctx.Value(response("response")).(string)
+	utils.Logger.Debugf("Response: %s", response)
 	return response, nil
 }
 
