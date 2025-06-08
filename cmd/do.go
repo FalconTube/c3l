@@ -64,7 +64,7 @@ func (c *DoCmd) Run() error {
 
 	// Send prompt and clip content to ollama
 	prompt := preparePrompt(oc, c.Prompt, content, c.Think)
-	response, err := askOllama(oc, prompt, c.Model, c.Think)
+	response, err := askOllama(oc, prompt, c.Model, c.Think, c.System)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func boolPointer(b bool) *bool {
 	return &b
 }
 
-func askOllama(ollamaClient utils.OllamaClient, prompt string, model string, think bool) (string, error) {
+func askOllama(ollamaClient utils.OllamaClient, prompt string, model string, think bool, system string) (string, error) {
 
 	req := &api.GenerateRequest{
 		Model:  model,
