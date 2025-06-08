@@ -26,7 +26,7 @@ func (c *DoCmd) Run() error {
 	}
 
 	if c.Expand {
-		expandedPrompt, err := utils.ExpandPromptFromToml(c.Prompt)
+		expandedPrompt, err := utils.ExpandAnyFromToml(c.Prompt, utils.PromptType)
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func (c *DoCmd) Run() error {
 		}
 
 		if c.System != "" {
-			expandedSystem, err := utils.ExpandSystemFromToml(c.System)
+			expandedSystem, err := utils.ExpandAnyFromToml(c.System, utils.SystemType)
 			if err != nil {
 				return err
 			}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/FalconTube/c3l/utils"
@@ -36,74 +35,27 @@ func (c *SystemCmd) Run() error {
 // --- Add prompt
 
 func (c *AddSystemCmd) Run() error {
-	systems, err := utils.GetPredefinedSystemsFromToml()
-	if err != nil {
-		return err
-	}
+	cmd := AddAnyCmd{Short: c.Short, Long: c.Long, Force: c.Force}
+	err := cmd.addPromptCmd(utils.SystemType)
+	return err
 
-	// Check map nil
-	if systems.Systems == nil {
-		systems.Systems = make(map[string]string)
-	}
-
-	// Only need to check, if not forcing override
-	if !c.Force {
-		check := systems.Systems[c.Short]
-		if check != "" {
-			return fmt.Errorf("prompt '%s' already exists. Use '--force' to override it", c.Short)
-		}
-	}
-
-	// Add new one
-	systems.Systems[c.Short] = c.Long
-
-	err = updateConfigWithSystems(systems)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // --- prompt list
 
 func (c *ListSystemCmd) Run() error {
-	utils.Logger.Info("Predefined Prompts:\n")
-	prompts, err := utils.GetPredefinedSystemsFromToml()
-	if err != nil {
-		return err
-	}
-	b, _ := toml.Marshal(prompts)
-	fmt.Println(string(b))
-	return nil
+	cmd := ListAnyCmd{}
+	err := cmd.listCmd(utils.SystemType)
+	return err
 }
 
 // --- prompt remove
 
 func (c *RemoveSystemCmd) Run() error {
-	prompts, err := utils.GetPredefinedSystemsFromToml()
-	if err != nil {
-		return err
-	}
-
-	// Check if exists, else return
-	check := prompts.Systems[c.Short]
-	if check == "" {
-		utils.Logger.Info("Prompt does not exist in config. Nothing to do...")
-		os.Exit(0)
-	}
-
-	for k := range prompts.Systems {
-		if k == c.Short {
-			delete(prompts.Systems, k)
-		}
-	}
-	err = updateConfigWithSystems(prompts)
-	if err != nil {
-		return err
-	}
-	return nil
+	cmd := RemoveAnyCmd{}
+	err := cmd.removeCmd(utils.SystemType)
+	return err
 }
-
 func updateConfigWithSystems(systems utils.ExpandSystems) error {
 	currentConfig, err := utils.ReadConfigAsStruct()
 	if err != nil {

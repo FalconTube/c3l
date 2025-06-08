@@ -25,57 +25,49 @@ type Flags struct {
 }
 
 type ExpandPrompts struct {
-	Prompts map[string]string `toml:"prompts"`
+	Entries map[string]string `toml:"prompts"`
 }
 
 type ExpandSystems struct {
-	Systems map[string]string `toml:"systems"`
+	Entries map[string]string `toml:"systems"`
 }
 
-func ExpandPromptFromToml(predefined string) (string, error) {
+type PredefinedExpansions struct {
+	ExpandPrompts ExpandPrompts
+	ExpandSystems ExpandSystems
+}
+
+type ExpandType int
+
+const (
+	PromptType ExpandType = iota
+	SystemType
+)
+
+func ExpandAnyFromToml(predefined string, expandType ExpandType) (string, error) {
 	if predefined == "" {
 		return "", nil
 	}
 
-	prePrompts, err := GetPredefinedPromptsFromToml()
+	pre, err := GetPredefinedFromToml()
 	if err != nil {
 		return "", err
 	}
-
-	expanded := prePrompts.Prompts[predefined]
-
+	var entries map[string]string
+	switch expandType {
+	case PromptType:
+		entries = pre.ExpandPrompts.Entries
+	case SystemType:
+		entries = pre.ExpandSystems.Entries
+	}
+	expanded := entries[predefined]
 	// If no expansion found, just return incoming prompt
 	if expanded == "" {
-		keys := make([]string, 0, len(prePrompts.Prompts))
-		for k := range prePrompts.Prompts {
+		keys := make([]string, 0, len(entries))
+		for k := range entries {
 			keys = append(keys, k)
 		}
-		Logger.Warnf("could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
-		return predefined, nil
-	}
-
-	return expanded, nil
-
-}
-
-func ExpandSystemFromToml(predefined string) (string, error) {
-	if predefined == "" {
-		return "", nil
-	}
-
-	preSystems, err := GetPredefinedSystemsFromToml()
-	if err != nil {
-		return "", err
-	}
-
-	expanded := preSystems.Systems[predefined]
-
-	if expanded == "" {
-		keys := make([]string, 0, len(preSystems.Systems))
-		for k := range preSystems.Systems {
-			keys = append(keys, k)
-		}
-		Logger.Warnf("could not find predefined system prompt \"%s\" in config file.\nAvailable system prompts:\n%s", predefined, keys)
+		Logger.Warnf("could not find predefined key \"%s\" in config file.\nAvailable values:\n%s", predefined, keys)
 		return predefined, nil
 	}
 
@@ -120,32 +112,22 @@ func ReadConfigAsStruct() (ConfigToml, error) {
 	return config, nil
 }
 
-func GetPredefinedPromptsFromToml() (ExpandPrompts, error) {
+func GetPredefinedFromToml() (PredefinedExpansions, error) {
 	config, err := ReadConfigAsBytes()
 	if err != nil {
-		return ExpandPrompts{}, err
+		return PredefinedExpansions{}, err
 	}
-
-	var customPrompts ExpandPrompts
-	err = toml.Unmarshal(config, &customPrompts)
+	var prompts ExpandPrompts
+	err = toml.Unmarshal(config, &prompts)
 	if err != nil {
-		return ExpandPrompts{}, err
+		return PredefinedExpansions{}, err
 	}
-	return customPrompts, nil
-
-}
-
-func GetPredefinedSystemsFromToml() (ExpandSystems, error) {
-	config, err := ReadConfigAsBytes()
+	var systems ExpandSystems
+	err = toml.Unmarshal(config, &systems)
 	if err != nil {
-		return ExpandSystems{}, err
+		return PredefinedExpansions{}, err
 	}
-
-	var customSystems ExpandSystems
-	err = toml.Unmarshal(config, &customSystems)
-	if err != nil {
-		return ExpandSystems{}, err
-	}
-	return customSystems, nil
+	pre := PredefinedExpansions{ExpandPrompts: prompts, ExpandSystems: systems}
+	return pre, nil
 
 }
