@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	utils "github.com/FalconTube/c3l/utils"
@@ -21,6 +20,11 @@ type response string
 
 func (c *DoCmd) Run() error {
 
+	oc, err := utils.InitOllamaClient(c.OllamaHost)
+	if err != nil {
+		return err
+	}
+
 	if c.Expand {
 		expandedPrompt, err := utils.ExpandPromptFromToml(c.Prompt)
 		if err != nil {
@@ -34,7 +38,6 @@ func (c *DoCmd) Run() error {
 	if err != nil {
 		return err
 	}
-	utils.Logger.Info(content)
 
 	// Spinner
 	p := utils.InitSpinner(c.Model)
@@ -46,8 +49,8 @@ func (c *DoCmd) Run() error {
 	}
 
 	// Send prompt and clip content to ollama
-	prompt := preparePrompt(c.Prompt, content, c.Think)
-	response, err := askOllama(prompt, c.Model, c.OllamaHost)
+	prompt := preparePrompt(oc, c.Prompt, content, c.Think)
+	response, err := askOllama(oc, prompt, c.Model, c.Think)
 	if err != nil {
 		return err
 	}
@@ -60,30 +63,30 @@ func (c *DoCmd) Run() error {
 	return nil
 }
 
-func askOllama(prompt, model, ollamaHost string) (string, error) {
-	err := os.Setenv("OLLAMA_HOST", ollamaHost)
-	if err != nil {
-		return "", err
-	}
-	client, err := api.ClientFromEnvironment()
-	if err != nil {
-		return "", err
-	}
+func boolPointer(b bool) *bool {
+	return &b
+}
+
+func askOllama(ollamaClient utils.OllamaClient, prompt string, model string, think bool) (string, error) {
 
 	req := &api.GenerateRequest{
 		Model:  model,
 		Prompt: prompt,
 		// set streaming to false
-		Stream: new(bool),
+		Stream: boolPointer(false),
+		// As of Ollama v0.9.0, can set Think in API.
+		// Still need to pass it via prompt, if older version in use
+		Think: boolPointer(think),
 	}
 
 	ctx := context.Background()
+
 	respFunc := func(resp api.GenerateResponse) error {
 		ctx = context.WithValue(ctx, response("response"), resp.Response)
 		return nil
 	}
 
-	err = client.Generate(ctx, req, respFunc)
+	err := ollamaClient.Client.Generate(ctx, req, respFunc)
 	if err != nil {
 		return "", err
 	}
@@ -92,9 +95,12 @@ func askOllama(prompt, model, ollamaHost string) (string, error) {
 	return response, nil
 }
 
-func preparePrompt(prompt, content string, noThink bool) string {
-	if !noThink {
-		prompt = fmt.Sprintf(" /no_think %s", prompt)
+func preparePrompt(ollamaClient utils.OllamaClient, prompt string, content string, think bool) string {
+	// TODO: Proper compare lookup
+	if ollamaClient.Version != "0.9.0" {
+		if !think {
+			prompt = fmt.Sprintf(" /no_think %s", prompt)
+		}
 	}
 
 	prompt = fmt.Sprintf(
