@@ -8,53 +8,56 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
-type PromptCmd struct {
-	Add    AddPromptCmd    `cmd:"" help:"Add a shorthand notation prompt to the config."`
-	Remove RemovePromptCmd `cmd:"" help:"Remove a shorthand notation prompt from the config."`
-	List   ListPromptCmd   `cmd:"" help:"List all shorthand notation prompts available in the config."`
+type SystemCmd struct {
+	Add    AddSystemCmd    `cmd:"" help:"Add a system prompt to the config."`
+	Remove RemoveSystemCmd `cmd:"" help:"Remove a system prompt from the config."`
+	List   ListSystemCmd   `cmd:"" help:"List all system prompts."`
 }
 
-type AddPromptCmd struct {
+type AddSystemCmd struct {
 	Short string `arg:"" help:"Shorthand notation of the prompt."`
 	Long  string `arg:"" help:"Full prompt to be expanded from the shorthand notation."`
 	Force bool   `short:"f" help:"If true, will replace prompt, even if it exists."`
 }
 
-type RemovePromptCmd struct {
+type RemoveSystemCmd struct {
 	Short string `arg:"" help:"Shorthand notation of prompt to be removed."`
 }
 
-type ListPromptCmd struct {
+type ListSystemCmd struct {
 }
 
 // --- Plain prompt command
 
-func (c *PromptCmd) Run() error {
+func (c *SystemCmd) Run() error {
 	return nil
 }
 
 // --- Add prompt
 
-func (c *AddPromptCmd) Run() error {
-	prompts, err := utils.GetPredefinedPromptsFromToml()
+func (c *AddSystemCmd) Run() error {
+	systems, err := utils.GetPredefinedSystemsFromToml()
 	if err != nil {
 		return err
 	}
+
 	// Check map nil
-	if prompts.Entries == nil {
-		prompts.Entries = make(map[string]string)
+	if systems.Entries == nil {
+		systems.Entries = make(map[string]string)
 	}
+
 	// Only need to check, if not forcing override
 	if !c.Force {
-		check := prompts.Entries[c.Short]
+		check := systems.Entries[c.Short]
 		if check != "" {
 			return fmt.Errorf("prompt '%s' already exists. Use '--force' to override it", c.Short)
 		}
 	}
 
 	// Add new one
-	prompts.Entries[c.Short] = c.Long
-	err = updateConfigWithPrompts(prompts)
+	systems.Entries[c.Short] = c.Long
+
+	err = updateConfigWithSystems(systems)
 	if err != nil {
 		return err
 	}
@@ -63,9 +66,9 @@ func (c *AddPromptCmd) Run() error {
 
 // --- prompt list
 
-func (c *ListPromptCmd) Run() error {
+func (c *ListSystemCmd) Run() error {
 	utils.Logger.Info("Predefined Prompts:\n")
-	prompts, err := utils.GetPredefinedPromptsFromToml()
+	prompts, err := utils.GetPredefinedSystemsFromToml()
 	if err != nil {
 		return err
 	}
@@ -76,8 +79,8 @@ func (c *ListPromptCmd) Run() error {
 
 // --- prompt remove
 
-func (c *RemovePromptCmd) Run() error {
-	prompts, err := utils.GetPredefinedPromptsFromToml()
+func (c *RemoveSystemCmd) Run() error {
+	prompts, err := utils.GetPredefinedSystemsFromToml()
 	if err != nil {
 		return err
 	}
@@ -94,20 +97,23 @@ func (c *RemovePromptCmd) Run() error {
 			delete(prompts.Entries, k)
 		}
 	}
-	err = updateConfigWithPrompts(prompts)
+	err = updateConfigWithSystems(prompts)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func updateConfigWithPrompts(prompts utils.Prompts) error {
+func updateConfigWithSystems(systems utils.Systems) error {
 	currentConfig, err := utils.ReadConfigAsStruct()
 	if err != nil {
 		return err
 	}
-	currentConfig.Prompts = prompts
-	newConfig, _ := toml.Marshal(currentConfig)
+	currentConfig.Systems = systems
+	newConfig, err := toml.Marshal(currentConfig)
+	if err != nil {
+		return err
+	}
 
 	configPath, err := utils.GetConfigPath()
 	if err != nil {
