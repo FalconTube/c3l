@@ -42,20 +42,20 @@ func (c *AddSystemCmd) Run() error {
 	}
 
 	// Check map nil
-	if systems.Systems == nil {
-		systems.Systems = make(map[string]string)
+	if systems.Entries == nil {
+		systems.Entries = make(map[string]string)
 	}
 
 	// Only need to check, if not forcing override
 	if !c.Force {
-		check := systems.Systems[c.Short]
+		check := systems.Entries[c.Short]
 		if check != "" {
 			return fmt.Errorf("prompt '%s' already exists. Use '--force' to override it", c.Short)
 		}
 	}
 
 	// Add new one
-	systems.Systems[c.Short] = c.Long
+	systems.Entries[c.Short] = c.Long
 
 	err = updateConfigWithSystems(systems)
 	if err != nil {
@@ -86,15 +86,15 @@ func (c *RemoveSystemCmd) Run() error {
 	}
 
 	// Check if exists, else return
-	check := prompts.Systems[c.Short]
+	check := prompts.Entries[c.Short]
 	if check == "" {
 		utils.Logger.Info("Prompt does not exist in config. Nothing to do...")
 		os.Exit(0)
 	}
 
-	for k := range prompts.Systems {
+	for k := range prompts.Entries {
 		if k == c.Short {
-			delete(prompts.Systems, k)
+			delete(prompts.Entries, k)
 		}
 	}
 	err = updateConfigWithSystems(prompts)
@@ -104,12 +104,12 @@ func (c *RemoveSystemCmd) Run() error {
 	return nil
 }
 
-func updateConfigWithSystems(systems utils.ExpandSystems) error {
+func updateConfigWithSystems(systems utils.Systems) error {
 	currentConfig, err := utils.ReadConfigAsStruct()
 	if err != nil {
 		return err
 	}
-	currentConfig.ExpandSystems = systems
+	currentConfig.Systems = systems
 	newConfig, err := toml.Marshal(currentConfig)
 	if err != nil {
 		return err

@@ -53,8 +53,8 @@ func (c *InitConfigCmd) Run() error {
 
 func writeConfigToFile(filename string) error {
 	defaultFlags := utils.Flags{Model: "qwen3:0.6b", OllamaHost: "127.0.0.1:11434"}
-	defaultPrompts := utils.ExpandPrompts{Prompts: map[string]string{"example": "Using the '--expand' flag with the word 'example' as the prompt will expand into this string."}}
-	defaultConfig := utils.ConfigToml{Flags: defaultFlags, ExpandPrompts: defaultPrompts}
+	defaultPrompts := utils.Prompts{Entries: map[string]string{"example": "Using the '--expand' flag with the word 'example' as the prompt will expand into this string."}}
+	defaultConfig := utils.ConfigToml{Flags: defaultFlags, Prompts: defaultPrompts}
 	content, err := toml.Marshal(defaultConfig)
 	if err != nil {
 		return err

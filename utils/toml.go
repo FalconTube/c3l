@@ -9,8 +9,8 @@ import (
 
 type ConfigToml struct {
 	Flags
-	ExpandPrompts
-	ExpandSystems
+	Prompts
+	Systems
 }
 
 type Flags struct {
@@ -24,12 +24,12 @@ type Flags struct {
 	OllamaHost string `help:"IP Address for the Ollama server." env:"OLLAMA_HOST" default:"127.0.0.1:11434"`
 }
 
-type ExpandPrompts struct {
-	Prompts map[string]string `toml:"prompts"`
+type Prompts struct {
+	Entries map[string]string `toml:"prompts"`
 }
 
-type ExpandSystems struct {
-	Systems map[string]string `toml:"systems"`
+type Systems struct {
+	Entries map[string]string `toml:"systems"`
 }
 
 func ExpandPromptFromToml(predefined string) (string, error) {
@@ -42,12 +42,12 @@ func ExpandPromptFromToml(predefined string) (string, error) {
 		return "", err
 	}
 
-	expanded := prePrompts.Prompts[predefined]
+	expanded := prePrompts.Entries[predefined]
 
 	// If no expansion found, just return incoming prompt
 	if expanded == "" {
-		keys := make([]string, 0, len(prePrompts.Prompts))
-		for k := range prePrompts.Prompts {
+		keys := make([]string, 0, len(prePrompts.Entries))
+		for k := range prePrompts.Entries {
 			keys = append(keys, k)
 		}
 		Logger.Warnf("could not find predefined prompt \"%s\" in config file.\nAvailable prompts:\n%s", predefined, keys)
@@ -68,11 +68,11 @@ func ExpandSystemFromToml(predefined string) (string, error) {
 		return "", err
 	}
 
-	expanded := preSystems.Systems[predefined]
+	expanded := preSystems.Entries[predefined]
 
 	if expanded == "" {
-		keys := make([]string, 0, len(preSystems.Systems))
-		for k := range preSystems.Systems {
+		keys := make([]string, 0, len(preSystems.Entries))
+		for k := range preSystems.Entries {
 			keys = append(keys, k)
 		}
 		Logger.Warnf("could not find predefined system prompt \"%s\" in config file.\nAvailable system prompts:\n%s", predefined, keys)
@@ -120,31 +120,31 @@ func ReadConfigAsStruct() (ConfigToml, error) {
 	return config, nil
 }
 
-func GetPredefinedPromptsFromToml() (ExpandPrompts, error) {
+func GetPredefinedPromptsFromToml() (Prompts, error) {
 	config, err := ReadConfigAsBytes()
 	if err != nil {
-		return ExpandPrompts{}, err
+		return Prompts{}, err
 	}
 
-	var customPrompts ExpandPrompts
+	var customPrompts Prompts
 	err = toml.Unmarshal(config, &customPrompts)
 	if err != nil {
-		return ExpandPrompts{}, err
+		return Prompts{}, err
 	}
 	return customPrompts, nil
 
 }
 
-func GetPredefinedSystemsFromToml() (ExpandSystems, error) {
+func GetPredefinedSystemsFromToml() (Systems, error) {
 	config, err := ReadConfigAsBytes()
 	if err != nil {
-		return ExpandSystems{}, err
+		return Systems{}, err
 	}
 
-	var customSystems ExpandSystems
+	var customSystems Systems
 	err = toml.Unmarshal(config, &customSystems)
 	if err != nil {
-		return ExpandSystems{}, err
+		return Systems{}, err
 	}
 	return customSystems, nil
 

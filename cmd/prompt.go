@@ -41,19 +41,19 @@ func (c *AddPromptCmd) Run() error {
 		return err
 	}
 	// Check map nil
-	if prompts.Prompts == nil {
-		prompts.Prompts = make(map[string]string)
+	if prompts.Entries == nil {
+		prompts.Entries = make(map[string]string)
 	}
 	// Only need to check, if not forcing override
 	if !c.Force {
-		check := prompts.Prompts[c.Short]
+		check := prompts.Entries[c.Short]
 		if check != "" {
 			return fmt.Errorf("prompt '%s' already exists. Use '--force' to override it", c.Short)
 		}
 	}
 
 	// Add new one
-	prompts.Prompts[c.Short] = c.Long
+	prompts.Entries[c.Short] = c.Long
 	err = updateConfigWithPrompts(prompts)
 	if err != nil {
 		return err
@@ -83,15 +83,15 @@ func (c *RemovePromptCmd) Run() error {
 	}
 
 	// Check if exists, else return
-	check := prompts.Prompts[c.Short]
+	check := prompts.Entries[c.Short]
 	if check == "" {
 		utils.Logger.Info("Prompt does not exist in config. Nothing to do...")
 		os.Exit(0)
 	}
 
-	for k := range prompts.Prompts {
+	for k := range prompts.Entries {
 		if k == c.Short {
-			delete(prompts.Prompts, k)
+			delete(prompts.Entries, k)
 		}
 	}
 	err = updateConfigWithPrompts(prompts)
@@ -101,12 +101,12 @@ func (c *RemovePromptCmd) Run() error {
 	return nil
 }
 
-func updateConfigWithPrompts(prompts utils.ExpandPrompts) error {
+func updateConfigWithPrompts(prompts utils.Prompts) error {
 	currentConfig, err := utils.ReadConfigAsStruct()
 	if err != nil {
 		return err
 	}
-	currentConfig.ExpandPrompts = prompts
+	currentConfig.Prompts = prompts
 	newConfig, _ := toml.Marshal(currentConfig)
 
 	configPath, err := utils.GetConfigPath()
