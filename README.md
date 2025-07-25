@@ -7,6 +7,7 @@
 Make your clipboard interact with an Ollama server.
 
 Simply use **Copy** in any application and automatically attach it to your prompt!
+Since the clipboard is so broadly available, you can chain and integrate this tool with you favourite command line applications, TUIs, GUIs and whatever you can imagine.
 
 ## Features
 
@@ -17,40 +18,65 @@ Simply use **Copy** in any application and automatically attach it to your promp
 
 ## Installation
 
+### Homebrew
+
+To install the `c3l` package via Homebrew, run the following command:
+
+```bash
+brew install github.com/FalconTube/c3l
+
+# Or in verbose form
+brew tap FalconTube/c3l
+brew install c3l
+```
+
+or
+
+This will install the latest version of `c3l` from the Falcontube/c3l repository, adding the binary to your system's PATH.
+
+### Golang
+
 ```bash
 go install github.com/FalconTube/c3l@latest
 ```
 
 This will install the latest version of `c3l` on your system and put the `c3l` binary on your path.
 
+### Binary install
+
+You can also download the binaries from the [GitHub releases page](https://github.com/FalconTube/c3l/releases) for all platforms.
+
 ## Usage
 
 The main command is `c3l do`, which takes the given `<prompt>` and the clipboard content
 and sends it to Ollama. Aliases are `exec,ask,run`.
 
-````bash
-$ c3l do --help
-Usage: c3l do (exec,ask,run) <prompt> [flags]
+```bash
+$ c3l --help
 
-Send <prompt> and clipboard content to Ollama
+Takes the clipboard content + given prompt and sends it to Ollama. If no subcommand is given, executes the 'do' command.
 
-Arguments:
-  <prompt>    Prompt being sent to Ollama
+Examples:
+
+    $ c3l "let's talk about the clipboard content" -p
+    $ c3l do "let's talk about the clipboard content" -p
+    $ c3l config list
+    $ c3l prompts add "let" "let's talk about the clipboard content"
+
+Commands:
+  do (exec,ask,run)    Send <prompt> and clipboard content to Ollama
+  config               Interact with default config at $HOME/.c3l.toml
+  prompts              Interact with prompts
+  systems              Interact with system prompts
 
 Flags:
-  -h, --help                             Show context-sensitive help.
+  -h, --help       Show context-sensitive help.
+      --version    Show version
+      --debug      Enable debug info
 
-  -t, --[no-]think                       If true, uses thinking mode, if applicable in model.
-                                         If false, adds '/no_think' to prompt
-  -p, --[no-]print                       If true, prints response to stdout (default: true)
-  -r, --[no-]replace                     If true, put Ollama output on clipboard
-  -m, --model="qwen3:0.6b"               Ollama model to use. Available models:
-                                         https://ollama.com/library
-  -n, --[no-]notify                      If true, display tray notification when finished.
-  -e, --[no-]expand                      Expand given prompt into long version, as defined in
-                                         $HOME/.c3l.toml
-      --ollama-host="127.0.0.1:11434"    IP Address for the Ollama server ($OLLAMA_HOST).```
-````
+Run "c3l <command> --help" for more information on a command.
+
+```
 
 All flags can be permanently set in a config file at `$HOME/.c3l.toml`.
 `c3l` has a `config` command to both initialize and list the content of this file.
